@@ -1,0 +1,2 @@
+package com.singtel.customerservice;import jakarta.persistence.*;import java.time.Instant;import java.math.BigDecimal;
+@Entity @Table(name="customers",indexes=@Index(name="customer_segment",columnList="segment"))public class Customer{@Id public String id;public String name;public String status="ACTIVE";public String segment;public String plan;public String channel;public String region;@Column(precision=19,scale=2)public BigDecimal spend;public boolean newCustomer;public boolean excluded;public boolean consent;public Instant updatedAt=Instant.now();public Customer(){}}

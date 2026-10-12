@@ -1,0 +1,16 @@
+# Set approved immutable image digests and pre-provisioned service-specific secrets.
+imageRepository: ""
+imageTag: ""
+replicas: 2
+issuer: ""
+kafkaBootstrap: ""
+services:
+  api-gateway: 8080
+  promotion-service: 8081
+  rule-engine-service: 8082
+  customer-service: 8083
+  eligibility-service: 8084
+  redemption-service: 8085
+resources:
+  requests: {cpu: 250m, memory: 384Mi}
+  limits: {cpu: "1", memory: 768Mi}

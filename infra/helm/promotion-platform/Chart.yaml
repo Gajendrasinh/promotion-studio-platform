@@ -1,0 +1,6 @@
+apiVersion: v2
+name: promotion-platform
+description: First-slice deployment baseline; externally provisioned data and identity dependencies
+version: 0.1.0
+appVersion: "0.1.0"
+type: application

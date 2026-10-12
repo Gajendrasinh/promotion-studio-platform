@@ -1,0 +1,2 @@
+package com.singtel.ruleengineservice;import jakarta.persistence.*;import java.util.*;import java.time.Instant;
+@Entity @Table(name="rule_versions") public class RuleVersion{@Id public UUID id=UUID.randomUUID();@Column(nullable=false)public String name;public int version=1;@Column(nullable=false,columnDefinition="text")public String expressionJson;@Column(nullable=false)public Instant publishedAt=Instant.now();@Column(nullable=false)public String createdBy;@Column(nullable=false,length=64)public String checksum;public RuleVersion(){}}

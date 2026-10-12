@@ -1,0 +1,3 @@
+package com.singtel.platformcommon;
+import org.springframework.http.HttpStatus;
+public class DomainError extends RuntimeException { public final HttpStatus status; public final String code; public DomainError(HttpStatus status,String code,String detail){super(detail);this.status=status;this.code=code;} public static DomainError invalid(String code,String detail){return new DomainError(HttpStatus.UNPROCESSABLE_ENTITY,code,detail);} public static DomainError conflict(String code,String detail){return new DomainError(HttpStatus.CONFLICT,code,detail);} public static DomainError missing(){return new DomainError(HttpStatus.NOT_FOUND,"NOT_FOUND","Resource not found");} }

@@ -1,0 +1,1 @@
+package com.singtel.ruleengineservice;import java.util.UUID;import org.springframework.data.jpa.repository.JpaRepository;public interface RuleRepository extends JpaRepository<RuleVersion,UUID>{}

@@ -1,0 +1,3 @@
+import http from 'k6/http';import{check,sleep}from'k6';
+export const options={stages:[{duration:'30s',target:10},{duration:'1m',target:10},{duration:'20s',target:0}],thresholds:{http_req_failed:['rate<0.01'],http_req_duration:['p(95)<500']}};
+export default function(){const base=__ENV.API_URL||'http://localhost:8080';const headers=__ENV.TOKEN?{Authorization:`Bearer ${__ENV.TOKEN}`}:{'X-Demo-Role':'ANALYST'};const r=http.get(`${base}/api/v1/customers/C00002/eligible-promotions`,{headers});check(r,{'eligibility returned':r=>r.status===200,'explainable response':r=>Array.isArray(r.json())});sleep(6);}

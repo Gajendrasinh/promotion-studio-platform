@@ -1,0 +1,1 @@
+package com.singtel.redemptionservice;import org.springframework.data.jpa.repository.JpaRepository;import java.util.*;public interface RedemptionRepository extends JpaRepository<Redemption,UUID>{Optional<Redemption> findByActorAndIdempotencyKey(String actor,String key);long countByPromotionIdAndCustomerIdAndStatus(UUID promotionId,String customerId,String status);}

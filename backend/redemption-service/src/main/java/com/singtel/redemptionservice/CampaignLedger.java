@@ -1,0 +1,2 @@
+package com.singtel.redemptionservice;import jakarta.persistence.*;import java.util.UUID;import java.math.BigDecimal;
+@Entity @Table(name="campaign_ledgers")public class CampaignLedger{@Id public UUID promotionId;public long redeemed;@Column(nullable=false,precision=19,scale=2)public BigDecimal spent=BigDecimal.ZERO;public CampaignLedger(){}public CampaignLedger(UUID id){promotionId=id;}}

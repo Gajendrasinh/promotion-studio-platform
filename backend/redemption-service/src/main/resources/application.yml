@@ -1,0 +1,74 @@
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${PORT:8085}
+  shutdown: graceful
+  max-http-request-header-size: 16KB
+spring:
+  application:
+    name: redemption-service
+  profiles:
+    default: local
+  datasource:
+    url: ${DATABASE_URL:jdbc:h2:file:./data/redemption-service;MODE=PostgreSQL;DB_CLOSE_ON_EXIT=FALSE}
+    username: ${DATABASE_USERNAME:sa}
+    password: ${DATABASE_PASSWORD:}
+    hikari:
+      maximum-pool-size: 10
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+  flyway:
+    enabled: false
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        enable.idempotence: true
+        acks: all
+        delivery.timeout.ms: 10000
+        request.timeout.ms: 5000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+logging:
+  structured:
+    format:
+      console: logstash
+platform:
+  events-enabled: ${EVENTS_ENABLED:false}
+  promotion-url: ${PROMOTION_URL:http://localhost:8081}
+  rule-url: ${RULE_URL:http://localhost:8082}
+  customer-url: ${CUSTOMER_URL:http://localhost:8083}
+  eligibility-url: ${ELIGIBILITY_URL:http://localhost:8084}
+  redemption-url: ${REDEMPTION_URL:http://localhost:8085}
+  audience: promotion-platform
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI}
+platform:
+  events-enabled: true

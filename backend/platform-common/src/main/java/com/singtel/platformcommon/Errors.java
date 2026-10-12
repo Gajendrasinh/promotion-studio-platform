@@ -1,0 +1,10 @@
+package com.singtel.platformcommon;
+import org.springframework.web.bind.annotation.*;import org.springframework.http.*;import org.springframework.web.bind.MethodArgumentNotValidException;import org.springframework.dao.DataIntegrityViolationException;import org.springframework.orm.ObjectOptimisticLockingFailureException;import org.springframework.security.access.AccessDeniedException;import org.springframework.web.client.RestClientException;
+@RestControllerAdvice public class Errors {
+ @ExceptionHandler(DomainError.class) public ProblemDetail domain(DomainError e){return problem(e.status,e.code,e.getMessage());}
+ @ExceptionHandler({MethodArgumentNotValidException.class,IllegalArgumentException.class,org.springframework.http.converter.HttpMessageNotReadableException.class}) public ProblemDetail invalid(Exception e){return problem(HttpStatus.BAD_REQUEST,"VALIDATION_ERROR","Request fields or rule expression are invalid");}
+ @ExceptionHandler({ObjectOptimisticLockingFailureException.class,DataIntegrityViolationException.class}) public ProblemDetail conflict(Exception e){return problem(HttpStatus.CONFLICT,"CONCURRENT_MODIFICATION","A conflicting record exists or the resource version changed");}
+ @ExceptionHandler(AccessDeniedException.class) public ProblemDetail forbidden(Exception e){return problem(HttpStatus.FORBIDDEN,"FORBIDDEN","This operation is not permitted for your role");}
+ @ExceptionHandler(RestClientException.class) public ProblemDetail downstream(Exception e){return problem(HttpStatus.SERVICE_UNAVAILABLE,"DEPENDENCY_UNAVAILABLE","A required service is unavailable; retry later");}
+ private ProblemDetail problem(HttpStatus status,String code,String detail){ProblemDetail p=ProblemDetail.forStatusAndDetail(status,detail);p.setTitle(code);p.setType(java.net.URI.create("urn:promotion:error:"+code.toLowerCase()));p.setProperty("code",code);var r=org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();if(r instanceof org.springframework.web.context.request.ServletRequestAttributes a)p.setProperty("correlationId",a.getRequest().getAttribute("correlationId"));return p;}
+}

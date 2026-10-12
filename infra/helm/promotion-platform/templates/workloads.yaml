@@ -1,0 +1,87 @@
+{{- $repository := required "Set imageRepository to your ECR registry" .Values.imageRepository -}}
+{{- $tag := required "Set imageTag to an immutable release tag" .Values.imageTag -}}
+{{- $issuer := required "Set issuer to the OIDC issuer URL" .Values.issuer -}}
+{{- $kafka := required "Set kafkaBootstrap to the private Kafka endpoint" .Values.kafkaBootstrap -}}
+{{- range $name, $port := .Values.services }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $name }}
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+spec:
+  replicas: {{ $.Values.replicas }}
+  revisionHistoryLimit: 3
+  strategy:
+    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
+  selector:
+    matchLabels: {app: {{ $name }}}
+  template:
+    metadata:
+      labels: {app: {{ $name }}, platform: promotion-platform}
+    spec:
+      serviceAccountName: {{ $name }}
+      terminationGracePeriodSeconds: 40
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, fsGroup: 10001}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: {app: {{ $name }}}
+      containers:
+        - name: service
+          image: "{{ $repository }}/{{ $name }}:{{ $tag }}"
+          ports: [{name: http, containerPort: {{ $port }}}]
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          env:
+            - {name: SPRING_PROFILES_ACTIVE, value: production}
+            - {name: SERVER_ADDRESS, value: "0.0.0.0"}
+            - {name: OIDC_ISSUER_URI, value: {{ $issuer | quote }}}
+            - {name: KAFKA_BOOTSTRAP_SERVERS, value: {{ $kafka | quote }}}
+            - {name: PROMOTION_URL, value: "http://promotion-service:8081"}
+            - {name: RULE_URL, value: "http://rule-engine-service:8082"}
+            - {name: CUSTOMER_URL, value: "http://customer-service:8083"}
+            - {name: ELIGIBILITY_URL, value: "http://eligibility-service:8084"}
+            - {name: REDEMPTION_URL, value: "http://redemption-service:8085"}
+          envFrom:
+            - secretRef: {name: "{{ $name }}-database"}
+          resources: {{ toYaml $.Values.resources | nindent 12 }}
+          startupProbe: {httpGet: {path: /actuator/health/liveness, port: http}, periodSeconds: 5, failureThreshold: 36}
+          livenessProbe: {httpGet: {path: /actuator/health/liveness, port: http}, periodSeconds: 15}
+          readinessProbe: {httpGet: {path: /actuator/health/readiness, port: http}, periodSeconds: 10}
+          volumeMounts: [{name: temporary, mountPath: /tmp}]
+      volumes: [{name: temporary, emptyDir: {sizeLimit: 128Mi}}]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+spec:
+  selector: {app: {{ $name }}}
+  ports: [{name: http, port: {{ $port }}, targetPort: http}]
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: {name: {{ $name }}}
+spec:
+  scaleTargetRef: {apiVersion: apps/v1, kind: Deployment, name: {{ $name }}}
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource: {name: cpu, target: {type: Utilization, averageUtilization: 65}}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: {name: {{ $name }}}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app: {{ $name }}}
+{{- end }}

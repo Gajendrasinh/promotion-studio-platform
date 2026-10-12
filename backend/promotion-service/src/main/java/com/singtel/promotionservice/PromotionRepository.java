@@ -1,0 +1,1 @@
+package com.singtel.promotionservice;import org.springframework.data.jpa.repository.JpaRepository;import java.util.*;public interface PromotionRepository extends JpaRepository<Promotion,UUID>{List<Promotion> findByStatus(Lifecycle.Status status);}

@@ -1,0 +1,12 @@
+package com.singtel.ruleengineservice;
+import java.util.*;import java.math.BigDecimal;
+public final class RuleModel {
+ public enum Op{AND,OR,NOT,EQ,IN,GTE}
+ public record Expression(Op op,String field,String value,List<Expression> children){}
+ public record Decision(boolean eligible,List<String> reasons){}
+ private static final Set<String> FIELDS=Set.of("segment","plan","region","channel","spend","newCustomer","excluded");
+ public static void validate(Expression e){int count=validate(e,0);if(count>100)throw new IllegalArgumentException("Maximum 100 nodes");}
+ private static int validate(Expression e,int depth){if(e==null||e.op()==null||depth>8)throw new IllegalArgumentException("Invalid rule depth or operator");if(Set.of(Op.AND,Op.OR,Op.NOT).contains(e.op())){if(e.children()==null||e.children().isEmpty()||e.children().size()>20||(e.op()==Op.NOT&&e.children().size()!=1))throw new IllegalArgumentException("Invalid condition group");return 1+e.children().stream().mapToInt(c->validate(c,depth+1)).sum();}if(!FIELDS.contains(e.field())||e.value()==null||e.value().length()>256)throw new IllegalArgumentException("Unsupported field or value");if(e.op()==Op.GTE){if(!"spend".equals(e.field()))throw new IllegalArgumentException("GTE only allowed for spend");new BigDecimal(e.value());}return 1;}
+ public static Decision evaluate(Expression e,Map<String,Object> facts){validate(e);return run(e,facts);}
+ private static Decision run(Expression e,Map<String,Object> facts){if(Set.of(Op.AND,Op.OR,Op.NOT).contains(e.op())){var results=e.children().stream().map(c->run(c,facts)).toList();boolean pass=switch(e.op()){case AND->results.stream().allMatch(Decision::eligible);case OR->results.stream().anyMatch(Decision::eligible);case NOT->!results.getFirst().eligible();default->false;};var reasons=new ArrayList<String>();results.forEach(r->reasons.addAll(r.reasons()));reasons.add(e.op()+" group: "+(pass?"matched":"failed"));return new Decision(pass,reasons);}Object actual=facts.get(e.field());boolean pass=actual!=null&&switch(e.op()){case EQ->String.valueOf(actual).equals(e.value());case IN->Arrays.stream(e.value().split(",")).map(String::trim).anyMatch(String.valueOf(actual)::equals);case GTE->new BigDecimal(String.valueOf(actual)).compareTo(new BigDecimal(e.value()))>=0;default->false;};return new Decision(pass,List.of((pass?"Matched: ":"Failed: ")+e.field()+" "+e.op()+" "+e.value()));}
+}

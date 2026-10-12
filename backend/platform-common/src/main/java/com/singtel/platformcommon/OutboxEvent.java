@@ -1,0 +1,3 @@
+package com.singtel.platformcommon;
+import jakarta.persistence.*;import java.time.Instant;import java.util.UUID;
+@Entity @Table(name="outbox_events",indexes=@Index(name="outbox_pending",columnList="publishedAt,createdAt")) public class OutboxEvent{@Id public UUID id=UUID.randomUUID();@Column(nullable=false)public String aggregateId;@Column(nullable=false)public String topic;@Column(nullable=false,columnDefinition="text")public String payload;@Column(nullable=false)public Instant createdAt=Instant.now();public Instant publishedAt;public int attempts;public OutboxEvent(){} public OutboxEvent(String aggregateId,String topic,String payload){this.aggregateId=aggregateId;this.topic=topic;this.payload=payload;}}

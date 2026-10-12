@@ -1,0 +1,14 @@
+**/target/
+**/node_modules/
+**/dist/
+**/data/
+**/*.log
+**/.env
+**/.env.local
+**/test-results/
+**/playwright-report/
+**/.terraform/
+**/*.tfstate*
+**/*.tfvars
+.DS_Store
+.runtime/
