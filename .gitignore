@@ -12,3 +12,4 @@
 **/*.tfvars
 .DS_Store
 .runtime/
+.archify/
