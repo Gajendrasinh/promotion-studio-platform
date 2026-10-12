@@ -2,6 +2,22 @@
 
 An enterprise promotion management vertical slice with a React / TypeScript dashboard and independently deployable Java services. This is an interview/reference architecture, **not Singtel's actual internal platform**. All sample customer data is synthetic.
 
+## Demo
+
+End-to-end walkthrough (synthetic demo mode): campaign search → rule simulation → six-step wizard → submit → independent approval → activation → customer eligibility and redemption → redemptions and analytics. [Full-quality MP4](docs/media/demo-walkthrough.mp4)
+
+![Promotion Studio demo walkthrough](docs/media/demo-walkthrough.gif)
+
+### System architecture
+
+Interactive diagram: gateway, services, per-service databases, outbox/Kafka relay and observability. [MP4](docs/media/architecture.mp4)
+
+![Promotion Studio system architecture](docs/media/architecture.gif)
+
+### Mobile
+
+![Promotion Studio mobile view](docs/media/demo-mobile.gif)
+
 ## What is implemented
 
 - Promotion lifecycle, optimistic version checks, independent approval, scheduled activation / expiry, audit timeline.
